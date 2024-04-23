@@ -1,3 +1,8 @@
+image: docker:19.03.12
+
+services:
+  - docker:19.03.12-dind
+
 stages:
   - build
   - deploy
@@ -7,19 +12,17 @@ variables:
 
 build:
   stage: build
-  image: docker:19.03.12
-  services:
-    - docker:19.03.12-dind
   script:
-    - chmod +x build.sh
-    - ./build.sh
-    - docker tag hello-world-webapp:latest $IMAGE_TAG
-    - echo "Build complete."
+    - echo "Building Docker image..."
+    - docker build -t $IMAGE_TAG .
+    - echo "Pushing Docker image..."
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $IMAGE_TAG
 
 deploy:
   stage: deploy
   script:
     - echo "Deploying application..."
-    - echo "This step can later include scripts to deploy the Docker image to a production server."
+    - ssh -o StrictHostKeyChecking=no ec2-user@13.60.17.42 "docker pull $IMAGE_TAG && docker run -d -p 80:80 $IMAGE_TAG"
   only:
     - master
