@@ -1,0 +1,25 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA
+
+build:
+  stage: build
+  image: docker:19.03.12
+  services:
+    - docker:19.03.12-dind
+  script:
+    - chmod +x build.sh
+    - ./build.sh
+    - docker tag hello-world-webapp:latest $IMAGE_TAG
+    - echo "Build complete."
+
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying application..."
+    - echo "This step can later include scripts to deploy the Docker image to a production server."
+  only:
+    - master
